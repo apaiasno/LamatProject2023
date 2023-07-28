@@ -4,10 +4,35 @@
 # Imports
 
 import numpy as np
+import scipy.interpolate
 import astropy.io.fits as FITS
 import pickle
 
-# Functions
+### FUNCTIONS ###
+
+## Data manipulation routines ##
+def interpolate_xy(x, y, x_new, fill_value='extrapolate'):
+    ''' Interpolate y values to new grid of x values.
+
+        Parameters
+        ----------
+        x : 1-D numpy array 
+            Current x values
+        y : 1-D numpy array 
+            Current y values
+        x_new : 1-D numpy array 
+            New x values to interpolate onto
+
+        Returns
+        -------
+        y_new : 1-D numpy array 
+            Interpolated y values
+    '''
+    quadinterp = scipy.interpolate.interp1d(x, y, kind='slinear', bounds_error=False, fill_value=fill_value)
+    return quadinterp(x_new)
+
+
+## SPEX-PRISM library routines
 
 def read_spectrum(filename):
     ''' Reads a spectrum from the SpeX Prism library.
@@ -60,6 +85,27 @@ def list_all_available_SpT():
 
     return list(SpT_data_dict.keys())
 
+def list_SpT_filenames(SpT):
+    ''' Prints all the filenames of a given spectral type available in the SpeX Prism library.
+
+        Parameters
+        ----------
+        SpT: string
+            String corresponding to spectral type of interest
+
+        Returns
+        -------
+        filwnames: list
+            List of strings corresponding to all filenames of the input spectral type
+    '''
+    spex_dir = 'SPEX-PRISM'
+
+    with open(spex_dir+'/spectral_data.pkl', 'rb') as fp:
+        SpT_data_dict = pickle.load(fp)
+
+    filenames = SpT_data_dict[SpT]
+    return filenames
+
 def get_all_SpT(SpT):
     ''' Returns all spectra corresponding to the input spectral type.
 
@@ -77,13 +123,7 @@ def get_all_SpT(SpT):
         errs: 2D numpy array
             Array of spectral errors for all spectra in library corresponding to input spectral type
     '''
-    spex_dir = 'SPEX-PRISM'
-
-    with open(spex_dir+'/spectral_data.pkl', 'rb') as fp:
-        SpT_data_dict = pickle.load(fp)
-
-    filenames = SpT_data_dict[SpT]
-    
+    filenames = list_SpT_filenames(SpT)
     wavs, fluxes, errs = [], [], []
 
     for filename in filenames:

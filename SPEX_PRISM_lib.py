@@ -4,10 +4,35 @@
 # Imports
 
 import numpy as np
+import scipy.interpolate
 import astropy.io.fits as FITS
 import pickle
 
-# Functions
+### FUNCTIONS ###
+
+## Data manipulation routines ##
+def interpolate_xy(x, y, x_new, fill_value='extrapolate'):
+    ''' Interpolate y values to new grid of x values.
+
+        Parameters
+        ----------
+        x : 1-D numpy array 
+            Current x values
+        y : 1-D numpy array 
+            Current y values
+        x_new : 1-D numpy array 
+            New x values to interpolate onto
+
+        Returns
+        -------
+        y_new : 1-D numpy array 
+            Interpolated y values
+    '''
+    quadinterp = scipy.interpolate.interp1d(x, y, kind='slinear', bounds_error=False, fill_value=fill_value)
+    return quadinterp(x_new)
+
+
+## SPEX-PRISM library routines
 
 def read_spectrum(filename):
     ''' Reads a spectrum from the SpeX Prism library.
